@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🎮 Tic Tac Toe - Kid Style</title>
+  <style>
+    body {
+      background: linear-gradient(to right, #f6d365, #fda085);
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      flex-direction: column;
+    }
+
+    h1 {
+      color: #fff;
+      font-size: 3em;
+      margin-bottom: 20px;
+      text-shadow: 2px 2px #ff69b4;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 120px);
+      grid-template-rows: repeat(3, 120px);
+      gap: 10px;
+    }
+
+    .cell {
+      width: 120px;
+      height: 120px;
+      background-color: #fff8dc;
+      border: 4px solid #ff69b4;
+      border-radius: 20px;
+      font-size: 3em;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .cell:hover {
+      background-color: #ffe4e1;
+      transform: scale(1.05);
+    }
+
+    .status {
+      margin-top: 20px;
+      font-size: 2em;
+      color: #fff;
+      text-shadow: 1px 1px #ff69b4;
+    }
+
+    .restart {
+      margin-top: 10px;
+      padding: 10px 20px;
+      background-color: #ff69b4;
+      color: white;
+      border: none;
+      border-radius: 15px;
+      font-size: 1.2em;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .restart:hover {
+      background-color: #ff1493;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🎉 Tic Tac Toe</h1>
+  <div class="board" id="board"></div>
+  <div class="status" id="status">Your Turn (X)</div>
+  <button class="restart" onclick="resetGame()">🔄 Restart</button>
+
+  <script>
+    const board = Array(9).fill("");
+    const human = "X";
+    const ai = "O";
+    let gameOver = false;
+
+    const boardElement = document.getElementById("board");
+    const statusElement = document.getElementById("status");
+
+    function render() {
+      boardElement.innerHTML = "";
+      board.forEach((cell, i) => {
+        const div = document.createElement("div");
+        div.className = "cell";
+        div.textContent = cell;
+        div.addEventListener("click", () => handleMove(i));
+        boardElement.appendChild(div);
+      });
+    }
+
+    function handleMove(index) {
+      if (board[index] !== "" || gameOver) return;
+      board[index] = human;
+      render();
+      if (checkWinner(human)) {
+        statusElement.textContent = "🎉 You Win!";
+        gameOver = true;
+        return;
+      }
+      if (isDraw()) {
+        statusElement.textContent = "😮 It's a Draw!";
+        gameOver = true;
+        return;
+      }
+      statusElement.textContent = "🤖 AI is thinking...";
+      setTimeout(() => {
+        aiMove();
+        render();
+        if (checkWinner(ai)) {
+          statusElement.textContent = "💻 AI Wins!";
+          gameOver = true;
+        } else if (isDraw()) {
+          statusElement.textContent = "😮 It's a Draw!";
+          gameOver = true;
+        } else {
+          statusElement.textContent = "Your Turn (X)";
+        }
+      }, 500);
+    }
+
+    function aiMove() {
+      const best = minimax(board, true);
+      board[best.index] = ai;
+    }
+
+    function minimax(newBoard, isMax) {
+      if (checkWinner(human)) return { score: -1 };
+      if (checkWinner(ai)) return { score: 1 };
+      if (isDraw()) return { score: 0 };
+
+      const moves = [];
+
+      for (let i = 0; i < 9; i++) {
+        if (newBoard[i] === "") {
+          newBoard[i] = isMax ? ai : human;
+          const result = minimax(newBoard, !isMax);
+          moves.push({ index: i, score: result.score });
+          newBoard[i] = "";
+        }
+      }
+
+      let bestMove = isMax
+        ? moves.reduce((max, move) => (move.score > max.score ? move : max), { score: -Infinity })
+        : moves.reduce((min, move) => (move.score < min.score ? move : min), { score: Infinity });
+
+      return bestMove;
+    }
+
+    function checkWinner(player) {
+      const winPatterns = [
+        [0,1,2], [3,4,5], [6,7,8],
+        [0,3,6], [1,4,7], [2,5,8],
+        [0,4,8], [2,4,6]
+      ];
+      return winPatterns.some(pattern =>
+        pattern.every(index => board[index] === player)
+      );
+    }
+
+    function isDraw() {
+      return board.every(cell => cell !== "");
+    }
+
+    function resetGame() {
+      for (let i = 0; i < 9; i++) board[i] = "";
+      gameOver = false;
+      statusElement.textContent = "Your Turn (X)";
+      render();
+    }
+
+    render();
+  </script>
+
+</body>
+</html>
